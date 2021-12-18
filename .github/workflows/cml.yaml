@@ -1,0 +1,25 @@
+name: CML
+on: [push]
+jobs:
+  get-report:
+    runs-on: [self-hosted, cml, gpu] # no spaces when running cml runner
+    timeout-minutes: 4320 # 72h
+    container:
+      image: docker://drivendata/cloud-cover-competition:gpu-latest
+      options: --gpus all
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14"
+      - run: npm install
+      - uses: iterative/setup-cml@v1
+      - name: fake_test_model_
+        env:
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          CODEBLOCK="\`\`\`"
+          echo $CODEBLOCK > report.md
+          nvidia-smi >> report.md
+          echo $CODEBLOCK >> report.md
+          cml-send-comment report.md
