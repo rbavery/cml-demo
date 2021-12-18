@@ -2,24 +2,23 @@ name: CML
 on: [push]
 jobs:
   get-report:
-    runs-on: [self-hosted, cml, gpu] # no spaces when running cml runner
+    runs-on: [self-hosted, cml, cpu] # no spaces when running cml runner
     timeout-minutes: 4320 # 72h
     container:
-      image: docker://drivendata/cloud-cover-competition:gpu-latest
-      options: --gpus all
+      image: docker://drivendata/cloud-cover-competition:cpu-latest # an example docker container with custom dependencies, not including cml
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2 # sets up npm, requirement for cml setup
         with:
           node-version: "14"
       - run: npm install
-      - uses: iterative/setup-cml@v1
-      - name: fake_test_model_
+      - uses: iterative/setup-cml@v1 # adds cml dependencies to custom docker
+      - name: fake_test_model
         env:
-          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }} # I think this is a constant, this token isn't user generated
         run: |
           CODEBLOCK="\`\`\`"
           echo $CODEBLOCK > report.md
-          nvidia-smi >> report.md
+          lscpu >> report.md
           echo $CODEBLOCK >> report.md
           cml-send-comment report.md
